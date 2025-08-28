@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-docxtpl
-jinja2
-python-multipart
