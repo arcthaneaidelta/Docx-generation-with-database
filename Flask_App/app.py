@@ -188,7 +188,7 @@ def upload_files():
         
         try:
             # Send to webhook
-            webhook_url = 'https://demo-webhook.com/endpoint'
+            webhook_url = 'https://primary-production-d168.up.railway.app/webhook/fe0bef47-853a-4e8b-bbf0-a2cdee4e18b1'
             response = requests.post(webhook_url, files=files, data=data, timeout=30)
             
             if response.status_code == 200:
@@ -344,4 +344,5 @@ def view_chat_details(session_id):
     return render_template('chat_details.html', chat=chat_data, files=files_data)
 
 if __name__ == '__main__':
+
     app.run(debug=True, port=5000)
