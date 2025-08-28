@@ -189,7 +189,7 @@ def upload_files():
         try:
             # Send to webhook
             webhook_url = 'https://primary-production-d168.up.railway.app/webhook/fe0bef47-853a-4e8b-bbf0-a2cdee4e18b1'
-            response = requests.post(webhook_url, files=files, data=data, timeout=30)
+            response = requests.post(webhook_url, files=files, data=data, timeout=300)
             
             if response.status_code == 200:
                 # Check if response is a DOCX file
@@ -346,3 +346,4 @@ def view_chat_details(session_id):
 if __name__ == '__main__':
 
     app.run(debug=True, port=5000)
+
