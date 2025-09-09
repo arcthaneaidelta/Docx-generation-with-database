@@ -1,610 +1,88 @@
-{% extends "base.html" %} {% block extra_css %}
-<style>
-  .upload-section {
-    background: #f8f9fa;
-    border: 2px dashed #dee2e6;
-    border-radius: 12px;
-    padding: 30px;
-    text-align: center;
-    margin-bottom: 30px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-
-  .upload-section:hover,
-  .upload-section.dragover {
-    border-color: #28a745;
-    background: #f8fff9;
-    transform: scale(1.02);
-  }
-
-  .upload-section.files-selected {
-    border-color: #28a745;
-    background: #f8fff9;
-  }
-
-  .file-inputs {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-
-  .file-input-group {
-    text-align: center;
-    min-width: 200px;
-  }
-
-  .file-input {
-    display: none;
-  }
-
-  .file-input-label {
-    display: inline-block;
-    padding: 15px 25px;
-    background: #6c757d;
-    color: white;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    margin-bottom: 10px;
-  }
-
-  .file-input-label:hover {
-    background: #5a6268;
-    transform: translateY(-2px);
-  }
-
-  .file-input-label.selected {
-    background: #28a745;
-  }
-
-  .file-name {
-    font-size: 0.9rem;
-    color: #28a745;
-    font-weight: 600;
-    background: #e8f5e8;
-    padding: 5px 12px;
-    border-radius: 15px;
-    display: inline-block;
-    margin-top: 5px;
-  }
-
-  .upload-icon {
-    font-size: 3rem;
-    color: #6c757d;
-    margin-bottom: 15px;
-  }
-
-  .upload-section.files-selected .upload-icon {
-    color: #28a745;
-  }
-
-  .upload-text {
-    font-size: 1.1rem;
-    color: #6c757d;
-    margin-bottom: 20px;
-  }
-
-  .chat-section {
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  .chat-messages {
-    height: 300px;
-    overflow-y: auto;
-    padding: 20px;
-    background: #fafafa;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  .message {
-    margin-bottom: 15px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .message.user {
-    background: #e3f2fd;
-    margin-left: auto;
-    text-align: right;
-  }
-
-  .message.system {
-    background: #f5f5f5;
-    color: #666;
-  }
-
-  .message.success {
-    background: #e8f5e8;
-    color: #2d5a2d;
-  }
-
-  .message.error {
-    background: #ffebee;
-    color: #c62828;
-  }
-
-  .chat-input-section {
-    padding: 20px;
-    background: white;
-    display: flex;
-    gap: 15px;
-    align-items: flex-end;
-  }
-
-  .message-input {
-    flex: 1;
-    min-height: 50px;
-    max-height: 120px;
-    padding: 15px;
-    border: 2px solid #dee2e6;
-    border-radius: 25px;
-    font-size: 1rem;
-    font-family: inherit;
-    resize: none;
-    transition: all 0.3s ease;
-    outline: none;
-  }
-
-  .message-input:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
-  }
-
-  .send-button {
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    outline: none;
-  }
-
-  .send-button:hover {
-    background: #218838;
-    transform: scale(1.05);
-  }
-
-  .send-button:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .loading {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #28a745;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  .download-link {
-    background: #28a745;
-    color: white;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-top: 10px;
-    transition: all 0.3s ease;
-    font-weight: 500;
-  }
-
-  .download-link:hover {
-    background: #218838;
-    transform: translateY(-2px);
-    text-decoration: none;
-    color: white;
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .file-inputs {
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .file-input-group {
-      width: 100%;
-      max-width: 300px;
-    }
-
-    .upload-section {
-      padding: 20px;
-    }
-
-    .chat-input-section {
-      padding: 15px;
-      gap: 10px;
-    }
-
-    .message {
-      max-width: 95%;
-    }
-  }
-  
-</style>
-{% endblock %} {% block content %}
-
-<div class="upload-section" id="uploadSection">
-  <div class="upload-icon">📁</div>
-  <div class="upload-text" id="uploadText">
-    <strong>Upload both CSV and TXT files</strong><br />
-    Click the buttons below or drag and drop your files here
-  </div>
-
-  <div class="file-inputs">
-    <div class="file-input-group">
-      <label for="csvFile" class="file-input-label" id="csvLabel">
-        📊 Select CSV File
-      </label>
-      <input type="file" id="csvFile" class="file-input" accept=".csv" />
-      <div id="csvFileName" class="file-name" style="display: none"></div>
-    </div>
-
-    <div class="file-input-group">
-      <label for="txtFile" class="file-input-label" id="txtLabel">
-        📄 Select TXT File
-      </label>
-      <input type="file" id="txtFile" class="file-input" accept=".txt" />
-      <div id="txtFileName" class="file-name" style="display: none"></div>
-    </div>
-  </div>
-</div>
-
-<div class="chat-section">
-  <div class="chat-messages" id="chatMessages">
-    <div class="message system">
-      Welcome! Please upload both CSV and TXT files and send a message to get
-      started.
-    </div>
-  </div>
-
-  <div class="chat-input-section">
-    <textarea
-      id="messageInput"
-      class="message-input"
-      placeholder="Type your message here..."
-      rows="1"
-    ></textarea>
-    <button id="sendButton" class="send-button" title="Send message">➤</button>
-  </div>
-</div>
-
-{% endblock %} {% block extra_js %}
-<script>
-  class FileProcessor {
-    constructor() {
-      this.csvFile = null;
-      this.txtFile = null;
-      this.isProcessing = false;
-
-      this.initializeElements();
-      this.attachEventListeners();
-    }
-
-    initializeElements() {
-      this.uploadSection = document.getElementById("uploadSection");
-      this.csvFileInput = document.getElementById("csvFile");
-      this.txtFileInput = document.getElementById("txtFile");
-      this.csvLabel = document.getElementById("csvLabel");
-      this.txtLabel = document.getElementById("txtLabel");
-      this.csvFileName = document.getElementById("csvFileName");
-      this.txtFileName = document.getElementById("txtFileName");
-      this.uploadText = document.getElementById("uploadText");
-      this.chatMessages = document.getElementById("chatMessages");
-      this.messageInput = document.getElementById("messageInput");
-      this.sendButton = document.getElementById("sendButton");
-    }
-
-    attachEventListeners() {
-      // File input events
-      this.csvFileInput.addEventListener("change", (e) =>
-        this.handleCsvSelect(e)
-      );
-      this.txtFileInput.addEventListener("change", (e) =>
-        this.handleTxtSelect(e)
-      );
-
-      // Drag and drop events
-      this.uploadSection.addEventListener("dragover", (e) =>
-        this.handleDragOver(e)
-      );
-      this.uploadSection.addEventListener("dragleave", (e) =>
-        this.handleDragLeave(e)
-      );
-      this.uploadSection.addEventListener("drop", (e) =>
-        this.handleFileDrop(e)
-      );
-
-      // Chat events
-      this.sendButton.addEventListener("click", () => this.sendMessage());
-      this.messageInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          this.sendMessage();
-        }
-      });
-
-      // Auto-resize textarea
-      this.messageInput.addEventListener("input", () =>
-        this.autoResizeTextarea()
-      );
-    }
-
-    handleDragOver(e) {
-      e.preventDefault();
-      this.uploadSection.classList.add("dragover");
-    }
-
-    handleDragLeave(e) {
-      e.preventDefault();
-      this.uploadSection.classList.remove("dragover");
-    }
-
-    handleFileDrop(e) {
-      e.preventDefault();
-      this.uploadSection.classList.remove("dragover");
-
-      const files = Array.from(e.dataTransfer.files);
-
-      files.forEach((file) => {
-        if (file.name.endsWith(".csv")) {
-          this.processFile(file, "csv");
-        } else if (file.name.endsWith(".txt")) {
-          this.processFile(file, "txt");
-        }
-      });
-    }
-
-    handleCsvSelect(e) {
-      const file = e.target.files[0];
-      if (file) {
-        this.processFile(file, "csv");
-      }
-    }
-
-    handleTxtSelect(e) {
-      const file = e.target.files[0];
-      if (file) {
-        this.processFile(file, "txt");
-      }
-    }
-
-    processFile(file, type) {
-      if (type === "csv") {
-        if (!file.name.endsWith(".csv")) {
-          this.addMessage("Please upload a valid CSV file.", "error");
-          return;
-        }
-        this.csvFile = file;
-        this.csvFileName.textContent = file.name;
-        this.csvFileName.style.display = "inline-block";
-        this.csvLabel.classList.add("selected");
-        this.csvLabel.textContent = "✅ CSV Selected";
-      } else if (type === "txt") {
-        if (!file.name.endsWith(".txt")) {
-          this.addMessage("Please upload a valid TXT file.", "error");
-          return;
-        }
-        this.txtFile = file;
-        this.txtFileName.textContent = file.name;
-        this.txtFileName.style.display = "inline-block";
-        this.txtLabel.classList.add("selected");
-        this.txtLabel.textContent = "✅ TXT Selected";
-      }
-
-      this.updateUploadStatus();
-    }
-
-    updateUploadStatus() {
-      if (this.csvFile && this.txtFile) {
-        this.uploadSection.classList.add("files-selected");
-        this.uploadText.innerHTML =
-          "<strong>Both files uploaded successfully!</strong><br>Ready to send your message";
-        this.addMessage(
-          `Files "${this.csvFile.name}" and "${this.txtFile.name}" uploaded successfully. You can now send your message.`,
-          "success"
-        );
-      }
-    }
-
-    autoResizeTextarea() {
-      this.messageInput.style.height = "auto";
-      this.messageInput.style.height =
-        Math.min(this.messageInput.scrollHeight, 120) + "px";
-    }
-
-    async sendMessage() {
-      const message = this.messageInput.value.trim();
-
-      if (!message) {
-        this.addMessage("Please enter a message.", "error");
-        return;
-      }
-
-      if (!this.csvFile || !this.txtFile) {
-        this.addMessage(
-          "Both CSV and TXT files are required. Please upload both files first.",
-          "error"
-        );
-        return;
-      }
-
-      if (this.isProcessing) {
-        return;
-      }
-
-      // Add user message to chat
-      this.addMessage(message, "user");
-      this.messageInput.value = "";
-      this.autoResizeTextarea();
-
-      // Start processing
-      this.isProcessing = true;
-      this.updateSendButton(true);
-      this.addMessage("Processing your request...", "system");
-
-      try {
-        await this.uploadFiles(message);
-      } catch (error) {
-        this.addMessage(
-          "An error occurred while processing your request. Please try again.",
-          "error"
-        );
-        console.error("Error:", error);
-      } finally {
-        this.isProcessing = false;
-        this.updateSendButton(false);
-      }
-    }
-
-    async uploadFiles(message) {
-      const formData = new FormData();
-      formData.append("csv_file", this.csvFile);
-      formData.append("txt_file", this.txtFile);
-      formData.append("message", message);
-
-      try {
-        const response = await fetch("/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          if (result.download_file_id) {
-            // Show success message with download link
-            const downloadMessage = document.createElement("div");
-            downloadMessage.innerHTML = `
-                        ${result.message}<br>
-                        <a href="/download/${result.download_file_id}" class="download-link" onclick="setTimeout(() => this.handleDownload(), 1000)">
-                            📥 Download ${result.download_filename}
-                        </a>
-                    `;
-
-            this.addMessage(downloadMessage, "success");
-          } else {
-            this.addMessage(result.message, "success");
-          }
-        } else {
-          this.addMessage(result.error || "An error occurred", "error");
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
-        this.addMessage(
-          "Network error occurred. Please check your connection and try again.",
-          "error"
-        );
-      }
-    }
-
-    handleDownload() {
-      // Reset the form after download
-      setTimeout(() => {
-        this.resetForm();
-      }, 2000);
-    }
-
-    resetForm() {
-      // Reset files
-      this.csvFile = null;
-      this.txtFile = null;
-
-      // Reset UI
-      this.csvFileInput.value = "";
-      this.txtFileInput.value = "";
-
-      this.csvFileName.style.display = "none";
-      this.txtFileName.style.display = "none";
-
-      this.csvLabel.classList.remove("selected");
-      this.txtLabel.classList.remove("selected");
-      this.csvLabel.textContent = "📊 Select CSV File";
-      this.txtLabel.textContent = "📄 Select TXT File";
-
-      this.uploadSection.classList.remove("files-selected");
-      this.uploadText.innerHTML =
-        "<strong>Upload both CSV and TXT files</strong><br>Click the buttons below or drag and drop your files here";
-
-      // Clear chat messages
-      this.chatMessages.innerHTML = `
-            <div class="message system">
-                Welcome! Please upload both CSV and TXT files and send a message to get started.
+{% extends "base.html" %}
+
+{% block title %}Home - Demand Letter Generator{% endblock %}
+
+{% block content %}
+<div class="card" data-aos="fade-up">
+    <div style="text-align: center;">
+        <div style="font-size: 4rem; color: #667eea; margin-bottom: 1rem;" data-aos="zoom-in">
+            <i class="fas fa-file-contract"></i>
+        </div>
+        
+        <h1 style="font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;" data-aos="fade-up" data-aos-delay="100">
+            Demand Letter Generator
+        </h1>
+        
+        <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.8;" data-aos="fade-up" data-aos-delay="200">
+            Generate professional demand letters effortlessly with our advanced AI-powered system. Upload your documents, chat with our intelligent assistant, and create compelling legal documents in minutes.
+        </p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 3rem;">
+            <div style="text-align: center; padding: 1.5rem; border-radius: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-upload" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 0.5rem;">Upload & Generate</h3>
+                <p style="opacity: 0.9;">Upload your TXT and CSV files to generate professional demand letters automatically.</p>
             </div>
-        `;
+            
+            <div style="text-align: center; padding: 1.5rem; border-radius: 15px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-robot" style="font-size: 2.5rem; margin-bottom: 1rem; color: #667eea;"></i>
+                <h3 style="margin-bottom: 0.5rem;">AI Chat Assistant</h3>
+                <p style="opacity: 0.8;">Get instant help and guidance from our intelligent chat assistant for all your legal document needs.</p>
+            </div>
+            
+            <div style="text-align: center; padding: 1.5rem; border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" data-aos="fade-up" data-aos-delay="500">
+                <i class="fas fa-history" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 0.5rem;">Track History</h3>
+                <p style="opacity: 0.9;">Keep track of all your generated documents and download them whenever you need.</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;" data-aos="fade-up" data-aos-delay="600">
+            <a href="{{ url_for('main') }}" class="btn btn-primary" style="font-size: 1.1rem; padding: 15px 30px;">
+                <i class="fas fa-rocket"></i> Get Started
+            </a>
+            <a href="{{ url_for('chat') }}" class="btn btn-success" style="font-size: 1.1rem; padding: 15px 30px;">
+                <i class="fas fa-comments"></i> Chat Now
+            </a>
+        </div>
+    </div>
+</div>
 
-      this.addMessage("Form reset. Ready for new files.", "system");
-    }
-
-    updateSendButton(isLoading) {
-      this.sendButton.disabled = isLoading;
-      this.sendButton.innerHTML = isLoading
-        ? '<div class="loading"></div>'
-        : "➤";
-    }
-
-    addMessage(content, type = "system") {
-      const messageDiv = document.createElement("div");
-      messageDiv.className = `message ${type}`;
-
-      if (typeof content === "string") {
-        messageDiv.textContent = content;
-      } else {
-        messageDiv.appendChild(content);
-      }
-
-      this.chatMessages.appendChild(messageDiv);
-      this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-    }
-  }
-
-  // Initialize the application when the page loads
-  document.addEventListener("DOMContentLoaded", () => {
-    new FileProcessor();
-  });
-
-
-</script>
+<div class="card" data-aos="fade-up" data-aos-delay="700">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">
+        <i class="fas fa-question-circle" style="color: #667eea;"></i> How It Works
+    </h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                1
+            </div>
+            <div>
+                <h4 style="margin-bottom: 0.5rem; color: #333;">Upload Files</h4>
+                <p style="color: #666; line-height: 1.6;">Upload your TXT template and CSV data file containing the information for your demand letter.</p>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+            <div style="background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                2
+            </div>
+            <div>
+                <h4 style="margin-bottom: 0.5rem; color: #333;">AI Processing</h4>
+                <p style="color: #666; line-height: 1.6;">Our AI system processes your files and generates a professional demand letter document.</p>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                3
+            </div>
+            <div>
+                <h4 style="margin-bottom: 0.5rem; color: #333;">Download & Use</h4>
+                <p style="color: #666; line-height: 1.6;">Download your professionally formatted DOCX file and use it for your legal needs.</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
