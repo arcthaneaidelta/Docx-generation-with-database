@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block title %}History - Demand Letter Generator{% endblock %}
+
+{% block styles %}
+<style>
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .history-table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .history-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .history-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .file-name {
+        font-weight: 500;
+        color: #333;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .download-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .download-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .empty-history {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #666;
+    }
+
+    .empty-history i {
+        font-size: 4rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+
+    .filter-section {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .filter-input {
+        padding: 8px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        min-width: 200px;
+    }
+
+    .filter-input:focus {
+        border-color: #667eea;
+        outline: none;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border-left: 4px solid #667eea;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 768px) {
+        .history-table {
+            font-size: 0.8rem;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 0.5rem;
+        }
+        
+        .file-name {
+            max-width: 120px;
+        }
+        
+        .filter-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-input {
+            min-width: auto;
+        }
+        
+        .download-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .history-table-container {
+            overflow-x: auto;
+        }
+        
+        .history-table {
+            min-width: 600px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card" data-aos="fade-up">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: #333;">
+        <i class="fas fa-history" style="color: #667eea;"></i> Document History
+    </h1>
+    
+    <!-- Statistics -->
+    <div class="stats-grid" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card">
+            <div class="stat-number">{{ files|length }}</div>
+            <div class="stat-label">Total Documents</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ files|selectattr('5', 'equalto', 'completed')|list|length }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ files|selectattr('5', 'equalto', 'processing')|list|length }}</div>
+            <div class="stat-label">Processing</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ files|selectattr('5', 'equalto', 'failed')|list|length }}</div>
+            <div class="stat-label">Failed</div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-section" data-aos="fade-up" data-aos-delay="200">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-search" style="color: #667eea;"></i>
+            <span style="color: #666; font-weight: 500;">Filter:</span>
+        </div>
+        <input type="text" 
+               id="searchInput" 
+               class="filter-input" 
+               placeholder="Search by filename...">
+        <select id="statusFilter" class="filter-input" style="min-width: 150px;">
+            <option value="">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="processing">Processing</option>
+            <option value="failed">Failed</option>
+        </select>
+    </div>
+    
+    {% if files %}
+        <div class="history-table-container" data-aos="fade-up" data-aos-delay="300">
+            <table class="history-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-hashtag"></i> ID</th>
+                        <th><i class="fas fa-file-alt"></i> TXT File</th>
+                        <th><i class="fas fa-table"></i> CSV File</th>
+                        <th><i class="fas fa-file-word"></i> Generated Document</th>
+                        <th><i class="fas fa-calendar"></i> Created</th>
+                        <th><i class="fas fa-info-circle"></i> Status</th>
+                        <th><i class="fas fa-download"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr data-status="{{ file[5] }}">
+                        <td><strong>#{{ file[0] }}</strong></td>
+                        <td>
+                            <div class="file-name" title="{{ file[1] }}">
+                                <i class="fas fa-file-alt"></i> {{ file[1] }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="file-name" title="{{ file[2] }}">
+                                <i class="fas fa-table"></i> {{ file[2] }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if file[3] %}
+                                <div class="file-name" title="{{ file[3] }}">
+                                    <i class="fas fa-file-word"></i> {{ file[3] }}
+                                </div>
+                            {% else %}
+                                <span style="color: #999; font-style: italic;">Not generated</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="font-size: 0.9rem;">
+                                <div>{{ file[4][:10] }}</div>
+                                <div style="color: #666;">{{ file[4][11:19] }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ file[5] }}">
+                                {% if file[5] == 'completed' %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% elif file[5] == 'processing' %}
+                                    <i class="fas fa-sync-alt fa-spin"></i>
+                                {% else %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                {% endif %}
+                                {{ file[5]|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if file[5] == 'completed' and file[3] %}
+                                <a href="/download/{{ file[0] }}" class="download-btn">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            {% elif file[5] == 'processing' %}
+                                <button class="download-btn" disabled>
+                                    <i class="fas fa-clock"></i> Processing
+                                </button>
+                            {% else %}
+                                <button class="download-btn" disabled>
+                                    <i class="fas fa-times"></i> Failed
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-history" data-aos="fade-up" data-aos-delay="300">
+            <i class="fas fa-inbox"></i>
+            <h3>No Documents Yet</h3>
+            <p>You haven't generated any demand letters yet. Start by uploading your files!</p>
+            <a href="{{ url_for('main') }}" class="btn btn-primary" style="margin-top: 1rem; font-size: 1.1rem; padding: 12px 25px;">
+                <i class="fas fa-plus"></i> Generate Your First Document
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% if files %}
+<div class="card" data-aos="fade-up" data-aos-delay="400">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">
+        <i class="fas fa-chart-bar" style="color: #667eea;"></i> Quick Actions
+    </h2>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('main') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Generate New Document
+        </a>
+        <button onclick="downloadAllCompleted()" class="btn btn-success">
+            <i class="fas fa-download"></i> Download All Completed
+        </button>
+        <button onclick="refreshPage()" class="btn" style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white;">
+            <i class="fas fa-sync-alt"></i> Refresh Status
+        </button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Search functionality
+const searchInput = document.getElementById('searchInput');
+const statusFilter = document.getElementById('statusFilter');
+const tableRows = document.querySelectorAll('#historyTable tbody tr');
+
+function filterTable() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusFilter_value = statusFilter.value.toLowerCase();
+    
+    tableRows.forEach(row => {
+        const txtFile = row.cells[1].textContent.toLowerCase();
+        const csvFile = row.cells[2].textContent.toLowerCase();
+        const docxFile = row.cells[3].textContent.toLowerCase();
+        const status = row.dataset.status.toLowerCase();
+        
+        const matchesSearch = txtFile.includes(searchTerm) || 
+                            csvFile.includes(searchTerm) || 
+                            docxFile.includes(searchTerm);
+        
+        const matchesStatus = statusFilter_value === '' || status === statusFilter_value;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update visible count
+    updateVisibleCount();
+}
+
+function updateVisibleCount() {
+    const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+    const totalRows = tableRows.length;
+    
+    // You can add a counter element if needed
+    console.log(`Showing ${visibleRows.length} of ${totalRows} documents`);
+}
+
+// Event listeners for filtering
+if (searchInput) {
+    searchInput.addEventListener('input', filterTable);
+}
+
+if (statusFilter) {
+    statusFilter.addEventListener('change', filterTable);
+}
+
+// Download all completed documents
+function downloadAllCompleted() {
+    const completedRows = document.querySelectorAll('#historyTable tbody tr[data-status="completed"]');
+    
+    if (completedRows.length === 0) {
+        alert('No completed documents available for download.');
+        return;
+    }
+    
+    completedRows.forEach((row, index) => {
+        const downloadLink = row.querySelector('.download-btn[href]');
+        if (downloadLink) {
+            setTimeout(() => {
+                window.open(downloadLink.href, '_blank');
+            }, index * 500); // Stagger downloads by 500ms
+        }
+    });
+}
+
+// Refresh page to check for updated statuses
+function refreshPage() {
+    window.location.reload();
+}
+
+// Auto-refresh for processing documents
+function autoRefresh() {
+    const processingRows = document.querySelectorAll('#historyTable tbody tr[data-status="processing"]');
+    
+    if (processingRows.length > 0) {
+        setTimeout(() => {
+            window.location.reload();
+        }, 10000); // Refresh every 10 seconds if there are processing documents
+    }
+}
+
+// Initialize auto-refresh
+document.addEventListener('DOMContentLoaded', function() {
+    autoRefresh();
+    
+    // Add tooltips to file names
+    const fileNames = document.querySelectorAll('.file-name');
+    fileNames.forEach(element => {
+        if (element.scrollWidth > element.clientWidth) {
+            element.style.cursor = 'help';
+        }
+    });
+});
+
+// Add click-to-copy functionality for file IDs
+document.querySelectorAll('#historyTable tbody tr td:first-child').forEach(cell => {
+    cell.style.cursor = 'pointer';
+    cell.title = 'Click to copy ID';
+    
+    cell.addEventListener('click', function() {
+        const id = this.textContent.replace('#', '');
+        navigator.clipboard.writeText(id).then(() => {
+            // Visual feedback
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check" style="color: #28a745;"></i> Copied!';
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 1500);
+        }).catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = id;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check" style="color: #28a745;"></i> Copied!';
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 1500);
+        });
+    });
+});
+
+// Status badge click functionality
+document.querySelectorAll('.status-badge').forEach(badge => {
+    if (badge.textContent.trim().toLowerCase().includes('processing')) {
+        badge.style.cursor = 'pointer';
+        badge.title = 'Click to check status';
+        
+        badge.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const id = row.cells[0].textContent.replace('#', '');
+            
+            // Check status
+            fetch(`/check_status/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'completed') {
+                        window.location.reload();
+                    } else if (data.status === 'failed') {
+                        window.location.reload();
+                    } else {
+                        // Still processing
+                        this.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Still Processing...';
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Processing';
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                });
+        });
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + F to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        if (searchInput) {
+            searchInput.focus();
+        }
+    }
+    
+    // Escape to clear filters
+    if (e.key === 'Escape') {
+        if (searchInput) searchInput.value = '';
+        if (statusFilter) statusFilter.value = '';
+        filterTable();
+    }
+});
+</script>
+{% endblock %}
