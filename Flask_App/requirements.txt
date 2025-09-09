@@ -1,5 +1,4 @@
-Flask
-Werkzeug
-requests
-sqlite3
-
+Flask==2.3.3
+requests==2.31.0
+gunicorn
+Werkzeug==2.3.7
