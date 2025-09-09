@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Generate - Demand Letter Generator{% endblock %}
+
+{% block content %}
+<div class="card" data-aos="fade-up">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: #333;">
+        <i class="fas fa-upload" style="color: #667eea;"></i> Generate Demand Letter
+    </h1>
+    
+    <div id="uploadSection">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div class="form-group" data-aos="fade-right" data-aos-delay="100">
+                    <label for="txtFile">
+                        <i class="fas fa-file-alt"></i> TXT Template File
+                    </label>
+                    <input type="file" 
+                           id="txtFile" 
+                           name="txt_file" 
+                           class="form-control" 
+                           accept=".txt" 
+                           required>
+                    <small style="color: #666; margin-top: 0.5rem; display: block;">
+                        Upload your demand letter template in TXT format
+                    </small>
+                </div>
+                
+                <div class="form-group" data-aos="fade-left" data-aos-delay="200">
+                    <label for="csvFile">
+                        <i class="fas fa-table"></i> CSV Data File
+                    </label>
+                    <input type="file" 
+                           id="csvFile" 
+                           name="csv_file" 
+                           class="form-control" 
+                           accept=".csv" 
+                           required>
+                    <small style="color: #666; margin-top: 0.5rem; display: block;">
+                        Upload your data file in CSV format
+                    </small>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;" data-aos="fade-up" data-aos-delay="300">
+                <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 15px 30px;">
+                    <i class="fas fa-rocket"></i> Generate Demand Letter
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="processingSection" style="display: none; text-align: center; padding: 2rem;">
+        <div class="loading" style="margin: 0 auto 1rem;"></div>
+        <h3 style="color: #667eea; margin-bottom: 1rem;">Processing Your Files</h3>
+        <p style="color: #666;">Please wait while we generate your demand letter. This may take a few moments...</p>
+        
+        <div style="margin-top: 2rem;">
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 10px; max-width: 400px; margin: 0 auto;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                    <span>Files uploaded successfully</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+                    <div class="loading" style="width: 16px; height: 16px;"></div>
+                    <span>Processing with AI...</span>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="checkStatus()" class="btn btn-primary" style="margin-top: 2rem;">
+            <i class="fas fa-sync-alt"></i> Check Status
+        </button>
+    </div>
+    
+    <div id="completedSection" style="display: none; text-align: center; padding: 2rem;">
+        <div style="font-size: 4rem; color: #28a745; margin-bottom: 1rem;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 style="color: #28a745; margin-bottom: 1rem;">Document Generated Successfully!</h3>
+        <p style="color: #666; margin-bottom: 2rem;">Your demand letter has been generated and is ready for download.</p>
+        
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button id="downloadBtn" class="btn btn-success" style="font-size: 1.1rem; padding: 15px 30px;">
+                <i class="fas fa-download"></i> Download Document
+            </button>
+            <button onclick="generateAnother()" class="btn btn-primary" style="font-size: 1.1rem; padding: 15px 30px;">
+                <i class="fas fa-plus"></i> Generate Another
+            </button>
+        </div>
+    </div>
+    
+    <div id="errorSection" style="display: none; text-align: center; padding: 2rem;">
+        <div style="font-size: 4rem; color: #dc3545; margin-bottom: 1rem;">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h3 style="color: #dc3545; margin-bottom: 1rem;">Generation Failed</h3>
+        <p id="errorMessage" style="color: #666; margin-bottom: 2rem;">Something went wrong while generating your document.</p>
+        
+        <button onclick="generateAnother()" class="btn btn-primary" style="font-size: 1.1rem; padding: 15px 30px;">
+            <i class="fas fa-redo"></i> Try Again
+        </button>
+    </div>
+</div>
+
+<div class="card" data-aos="fade-up" data-aos-delay="400">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">
+        <i class="fas fa-info-circle" style="color: #667eea;"></i> File Requirements
+    </h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div style="border-left: 4px solid #667eea; padding-left: 1rem;">
+            <h4 style="color: #333; margin-bottom: 0.5rem;">
+                <i class="fas fa-file-alt"></i> TXT Template File
+            </h4>
+            <ul style="color: #666; margin-left: 1rem; line-height: 1.6;">
+                <li>Must be a valid .txt file</li>
+                <li>Contains your demand letter template</li>
+                <li>Use placeholders that match CSV columns</li>
+                <li>Maximum file size: 16MB</li>
+            </ul>
+        </div>
+        
+        <div style="border-left: 4px solid #28a745; padding-left: 1rem;">
+            <h4 style="color: #333; margin-bottom: 0.5rem;">
+                <i class="fas fa-table"></i> CSV Data File
+            </h4>
+            <ul style="color: #666; margin-left: 1rem; line-height: 1.6;">
+                <li>Must be a valid .csv file</li>
+                <li>Contains data to populate the template</li>
+                <li>First row should contain column headers</li>
+                <li>Maximum file size: 16MB</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentFileId = null;
+
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    const txtFile = document.getElementById('txtFile').files[0];
+    const csvFile = document.getElementById('csvFile').files[0];
+    
+    if (!txtFile || !csvFile) {
+        showError('Please select both TXT and CSV files');
+        return;
+    }
+    
+    formData.append('txt_file', txtFile);
+    formData.append('csv_file', csvFile);
+    
+    showProcessing();
+    
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            currentFileId = result.file_id;
+            startStatusCheck();
+        } else {
+            showError(result.error || 'Upload failed');
+        }
+    } catch (error) {
+        showError('Network error. Please try again.');
+    }
+});
+
+function showProcessing() {
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('processingSection').style.display = 'block';
+    document.getElementById('completedSection').style.display = 'none';
+    document.getElementById('errorSection').style.display = 'none';
+}
+
+function showCompleted() {
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('processingSection').style.display = 'none';
+    document.getElementById('completedSection').style.display = 'block';
+    document.getElementById('errorSection').style.display = 'none';
+    
+    document.getElementById('downloadBtn').onclick = function() {
+        window.open(`/download/${currentFileId}`, '_blank');
+    };
+}
+
+function showError(message) {
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('processingSection').style.display = 'none';
+    document.getElementById('completedSection').style.display = 'none';
+    document.getElementById('errorSection').style.display = 'block';
+    document.getElementById('errorMessage').textContent = message;
+}
+
+function generateAnother() {
+    document.getElementById('uploadSection').style.display = 'block';
+    document.getElementById('processingSection').style.display = 'none';
+    document.getElementById('completedSection').style.display = 'none';
+    document.getElementById('errorSection').style.display = 'none';
+    
+    // Reset form
+    document.getElementById('uploadForm').reset();
+    currentFileId = null;
+}
+
+async function checkStatus() {
+    if (!currentFileId) return;
+    
+    try {
+        const response = await fetch(`/check_status/${currentFileId}`);
+        const result = await response.json();
+        
+        if (result.status === 'completed') {
+            showCompleted();
+        } else if (result.status === 'failed') {
+            showError('Document generation failed. Please try again.');
+        } else {
+            // Still processing
+            setTimeout(checkStatus, 2000);
+        }
+    } catch (error) {
+        console.error('Error checking status:', error);
+        setTimeout(checkStatus, 3000);
+    }
+}
+
+function startStatusCheck() {
+    setTimeout(checkStatus, 3000);
+}
+</script>
+{% endblock %}
